@@ -5,10 +5,10 @@ public class Game
 {
     public int Id { get; set; }
     [Required]
-    [StringLength(50)] // Max limit the length of the name to 50 characters
+    [StringLength(75)] // Max limit the length of the name to 50 characters
     public required string Name { get; set; }
     [Required]
-    [StringLength(20)]
+    [StringLength(30)]
     public required string Genre { get; set; }
     [Range(1, 100)]
     public decimal Price { get; set; }

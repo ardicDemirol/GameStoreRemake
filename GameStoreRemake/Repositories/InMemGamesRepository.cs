@@ -59,7 +59,7 @@ public class InMemGamesRepository : IGamesRepositories
 
     public void Delete(int id)
     {
-        var index = games.FindIndex(x => x.Id == id);
+        var index = games.FindIndex(game => game.Id == id);
         games.RemoveAt(index);
     }
 
