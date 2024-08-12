@@ -4,10 +4,10 @@ namespace GameStoreRemake.Repositories
 {
     public interface IGamesRepositories
     {
-        void Create(Game game);
-        void Delete(int id);
-        Game? Get(int id);
-        IEnumerable<Game> GetAll();
-        void Update(Game updatedGame);
+        Task Create(Game game);
+        Task Delete(int id);
+        Task<Game?> Get(int id);
+        Task<IEnumerable<Game>> GetAll();
+        Task Update(Game updatedGame);
     }
 }

@@ -1,22 +1,17 @@
 using GameStoreRemake.Data;
 using GameStoreRemake.Endpoints;
-using GameStoreRemake.Repositories;
-using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddSingleton<IGamesRepositories, InMemGamesRepository>();
-
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-
-builder.Services.AddSqlServer<ApplicationDbContext>(connectionString);
+builder.Services.AddRepositories(builder.Configuration);
 
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
 var app = builder.Build();
-app.Services.InitializeDb();
+
+await app.Services.InitializeDb();
 
 
 app.UseHttpsRedirection();
