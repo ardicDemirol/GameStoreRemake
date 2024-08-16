@@ -1,4 +1,5 @@
-﻿using GameStoreRemake.Repositories;
+﻿using GameStoreRemake.Interfaces;
+using GameStoreRemake.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameStoreRemake.Data;

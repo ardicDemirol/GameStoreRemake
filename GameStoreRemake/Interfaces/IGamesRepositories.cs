@@ -1,6 +1,6 @@
 ﻿using GameStoreRemake.Entities;
 
-namespace GameStoreRemake.Repositories
+namespace GameStoreRemake.Interfaces
 {
     public interface IGamesRepositories
     {

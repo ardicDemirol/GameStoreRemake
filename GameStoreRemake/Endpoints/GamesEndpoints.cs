@@ -1,44 +1,62 @@
 ﻿using GameStoreRemake.Dtos;
 using GameStoreRemake.Entities;
-using GameStoreRemake.Repositories;
+using GameStoreRemake.Interfaces;
+using GameStoreRemake.Services;
+using System.Text;
 
 namespace GameStoreRemake.Endpoints;
 
 public static class GamesEndpoints
 {
-    const string GetGameEndpointName = "GetGameById";
+    const string GetGameByIdEndpointName = "GetGameById";
+    const string GetGameByIdCachingName = "ALL_GAMES";
+    const string GetGameCachingName = "GAME";
 
     public static RouteGroupBuilder MapGamesEndpoints(this IEndpointRouteBuilder routes)
     {
         var group = routes.MapGroup("/games").WithParameterValidation();
 
-        group.MapGet("/", async (IGamesRepositories repository) =>
-            (await repository.GetAll()).Select(game => game.AsDto()));
-
-
-        group.MapGet("/{id}", async (IGamesRepositories repository, int id) =>
+        group.MapGet("/", async (IGamesRepositories repository, IRedisCacheService cacheService) =>
         {
-            Game? game = await repository.Get(id);
-            return game is not null ? Results.Ok(game.AsDto()) : Results.NotFound();
-        }).WithName(GetGameEndpointName);
-
-
-
-        group.MapPost("/", async (IGamesRepositories repository, CreateGameDto gameDto) =>
-        {
-            Game game = new()
-            {
-                Name = gameDto.Name,
-                Genre = gameDto.Genre,
-                Price = gameDto.Price,
-                ReleaseDate = gameDto.ReleaseDate,
-                ImageUri = gameDto.ImageUri
-            };
-
-            await repository.Create(game);
-
-            return Results.CreatedAtRoute(GetGameEndpointName, new { id = game.Id }, game);
+            return await CacheExtensions.GetGamesAsync(repository, cacheService, GetGameByIdCachingName);
         });
+
+        group.MapGet("/{id}", async (IGamesRepositories repository, IRedisCacheService cacheService, int id) =>
+            {
+                //return game is not null ? Results.Ok(game.AsDto()) : Results.NotFound();
+
+                var builder = new StringBuilder(GetGameCachingName);
+                builder.Append(id);
+                var fullCacheKey = builder.ToString();
+
+                var gameDto = await CacheExtensions.GetGameByIdAsync(repository, cacheService, id, fullCacheKey);
+
+                return gameDto != null ? Results.Ok(gameDto) : Results.NotFound();
+
+            }).WithName(GetGameByIdEndpointName);
+
+
+
+        group.MapPost("/", async (IGamesRepositories repository, CreateGameDto gameDto, IRedisCacheService cache) =>
+                    {
+                        await cache.SetValueAsync("newGame", gameDto.Name);
+
+                        Game game = new()
+                        {
+                            Name = gameDto.Name,
+                            Genre = gameDto.Genre,
+                            Price = gameDto.Price,
+                            ReleaseDate = gameDto.ReleaseDate,
+                            ImageUri = gameDto.ImageUri
+                        };
+
+                        await repository.Create(game);
+
+                        return Results.CreatedAtRoute(GetGameByIdEndpointName, new
+                        {
+                            id = game.Id
+                        }, game);
+                    });
 
 
         group.MapPut("/{id}", async (IGamesRepositories repository, int id, UpdateGameDto updatedGameDto) =>
